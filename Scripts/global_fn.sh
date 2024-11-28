@@ -111,3 +111,22 @@ prompt_timer() {
     echo ""
     set -e
 }
+# Detect package manager
+detect_package_manager() {
+    if command -v apt &> /dev/null; then
+        export PKG_MANAGER="apt"
+        export PKG_INSTALL_CMD="sudo apt install -y"
+        export PKG_UPDATE_CMD="sudo apt update -y"
+    elif command -v dnf &> /dev/null; then
+        export PKG_MANAGER="dnf"
+        export PKG_INSTALL_CMD="sudo dnf install -y"
+        export PKG_UPDATE_CMD="sudo dnf update -y"
+    elif command -v pacman &> /dev/null; then
+        export PKG_MANAGER="pacman"
+        export PKG_INSTALL_CMD="sudo pacman -S --noconfirm"
+        export PKG_UPDATE_CMD="sudo pacman -Syu --noconfirm"
+    else
+        echo "Unsupported package manager. Exiting..."
+        exit 1
+    fi
+}
