@@ -22,6 +22,7 @@ packages=(
     cmake-extras
     curl
     dolphin
+    dolphin-plugins
     dunst
     eza
     fastfetch
@@ -38,6 +39,7 @@ packages=(
     imagemagick
     jq
     kitty
+    kio-extras
     kde-cli-tools
     libavcodec-dev
     libavformat-dev
