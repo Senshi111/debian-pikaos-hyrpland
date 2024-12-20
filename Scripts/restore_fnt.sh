@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #|---/ /+------------------------------------+---/ /|#
 #|--/ /-| Script to extract fonts and themes |--/ /-|#
 #|-/ /--| Prasanth Rangan                    |-/ /--|#

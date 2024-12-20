@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #|---/ /+-----------------------------+---/ /|#
 #|--/ /-| Script to configure my apps |--/ /-|#
 #|-/ /--| Prasanth Rangan             |-/ /--|#

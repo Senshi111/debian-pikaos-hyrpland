@@ -37,15 +37,15 @@ while read -r pkg deps; do
             if ! pkg_installed "${dep}" && ! cut -d '#' -f 1 "${listPkg}" | awk -F '|' -v chk="${dep}" '$1 == chk {exit 1}'; then
                 missingDeps=1
                 echo -e "\033[0;33m[skip]\033[0m Dependency ${dep} for ${pkg} not satisfied."
-                break
-            fi
+                    break
+                fi
         done
-    fi
+            fi
 
     # Skip if dependencies are missing
     if [[ ${missingDeps} -eq 1 ]]; then
-        continue
-    fi
+            continue
+        fi
 
     # Check if package is already installed
     if pkg_installed "${pkg}"; then

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #|---/ /+-------------------------------------------+---/ /|#
 #|--/ /-| Script to install aur helper, yay or paru |--/ /-|#
 #|-/ /--| Prasanth Rangan                           |-/ /--|#

@@ -2,7 +2,7 @@
 configuration {
     modi:                        "drun,filebrowser,window,run";
     show-icons:                  true;
-    display-drun:                "🐥 ";
+    display-drun:                " ";
     display-run:                 " ";
     display-filebrowser:         " ";
     display-window:              " ";
