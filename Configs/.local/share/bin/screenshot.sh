@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # Restores the shader after screenshot has been taken
 restore_shader() {

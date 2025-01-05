@@ -3,7 +3,7 @@
     border-radius: 0px;
     font-family: "JetBrainsMono Nerd Font";
     font-weight: bold;
-    font-size: 11px;
+    font-size: 10px;
     min-height: 10px;
 }
 
@@ -16,7 +16,7 @@ window#waybar {
 tooltip {
     background: @main-bg;
     color: @main-fg;
-    border-radius: 8px;
+    border-radius: 7px;
     border-width: 0px;
 }
 
@@ -39,8 +39,8 @@ tooltip {
     background: @wb-act-bg;
     color: @wb-act-fg;
     margin-left: 3px;
-    padding-left: 13px;
-    padding-right: 13px;
+    padding-left: 12px;
+    padding-right: 12px;
     margin-right: 3px;
     animation: ws_active 20s ease-in-out 1;
     transition: all 0.4s cubic-bezier(.55,-0.68,.48,1.682);
@@ -72,8 +72,8 @@ tooltip {
     background: @wb-act-bg;
     color: @wb-act-color;
     margin-left: 3px;
-    padding-left: 13px;
-    padding-right: 13px;
+    padding-left: 12px;
+    padding-right: 12px;
     margin-right: 3px;
     animation: tb_active 20s ease-in-out 1;
     transition: all 0.4s cubic-bezier(.55,-0.68,.48,1.682);
@@ -97,7 +97,6 @@ tooltip {
 #backlight,
 #battery,
 #bluetooth,
-#custom-cava,
 #custom-cliphist,
 #clock,
 #custom-cpuinfo,
@@ -111,7 +110,6 @@ tooltip {
 #network,
 #custom-notifications,
 #custom-power,
-#privacy,
 #pulseaudio,
 #custom-spotify,
 #taskbar,
@@ -142,13 +140,13 @@ tooltip {
 }
 
 #custom-r_end {
-    border-radius: 0px 23px 23px 0px;
+    border-radius: 0px 21px 21px 0px;
     margin-right: 9px;
     padding-right: 3px;
 }
 
 #custom-l_end {
-    border-radius: 23px 0px 0px 23px;
+    border-radius: 21px 0px 0px 21px;
     margin-left: 9px;
     padding-left: 3px;
 }
@@ -166,13 +164,13 @@ tooltip {
 }
 
 #custom-rr_end {
-    border-radius: 0px 8px 8px 0px;
+    border-radius: 0px 7px 7px 0px;
     margin-right: 9px;
     padding-right: 3px;
 }
 
 #custom-rl_end {
-    border-radius: 8px 0px 0px 8px;
+    border-radius: 7px 0px 0px 7px;
     margin-left: 9px;
     padding-left: 3px;
 }

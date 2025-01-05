@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 
 # detect hypr theme and initialize variables

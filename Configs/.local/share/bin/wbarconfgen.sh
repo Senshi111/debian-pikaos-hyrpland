@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 
 # read control file and initialize variables

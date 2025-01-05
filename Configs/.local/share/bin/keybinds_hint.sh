@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 #* jq to parse and create a metadata.
 #* Users are advised to use bindd to explicitly add the description
