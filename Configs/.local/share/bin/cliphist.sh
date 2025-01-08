@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 # Set variables
 scrDir=$(dirname "$(realpath "$0")")

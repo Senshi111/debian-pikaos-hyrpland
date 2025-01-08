@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 # Check if the script is already running
 pgrep -cf "${0##*/}" | grep -qv 1 && echo "An instance of the script is already running..." && exit 1

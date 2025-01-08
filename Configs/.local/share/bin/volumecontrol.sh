@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 # Source global control script
 scrDir=$(dirname "$(realpath "$0")")

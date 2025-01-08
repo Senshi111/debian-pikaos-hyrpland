@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 
 #// Check if wlogout is already running

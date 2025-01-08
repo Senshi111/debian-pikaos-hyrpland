@@ -88,7 +88,7 @@ EOF
     # Select the correct package list based on the package manager
     if [[ "$PKG_MANAGER" == "apt" ]] && [ -f "${scrDir}/debian_hypr.lst" ]; then
         echo "Detected Debian-based system. Using debian_hypr.lst..."
-       sudo "${scrDir}/install_debian_packages.sh"
+    #   sudo "${scrDir}/install_debian_packages.sh"
         #cp "${scrDir}/custom_hypr.lst" "${scrDir}/install_pkg.lst"
     else
     cp "${scrDir}/custom_hypr.lst" "${scrDir}/install_pkg.lst"
@@ -114,9 +114,9 @@ EOF
     # Install packages
     "${scrDir}/install_pkg.sh" "${scrDir}/install_pkg.lst"
     rm "${scrDir}/install_pkg.lst"
-       "${scrDir}/swww.sh"
-       "${scrDir}/install_pokemon-colorscripts.sh"
-       "${scrDir}/install_kvantum_qt6.sh"
+     #  "${scrDir}/swww.sh"
+     #  "${scrDir}/install_pokemon-colorscripts.sh"
+     #  "${scrDir}/install_kvantum_qt6.sh"
 #        "${scrDir}/hyprutils.sh"
 #        "${scrDir}/build_hyprlang.sh"
 #        "${scrDir}/hyprcursor.sh"
