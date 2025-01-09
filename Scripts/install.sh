@@ -88,7 +88,7 @@ EOF
     # Select the correct package list based on the package manager
     if [[ "$PKG_MANAGER" == "apt" ]] && [ -f "${scrDir}/debian_hypr.lst" ]; then
         echo "Detected Debian-based system. Using debian_hypr.lst..."
-    #   sudo "${scrDir}/install_debian_packages.sh"
+        sudo "${scrDir}/install_debian_packages.sh"
         #cp "${scrDir}/custom_hypr.lst" "${scrDir}/install_pkg.lst"
     else
     cp "${scrDir}/custom_hypr.lst" "${scrDir}/install_pkg.lst"
