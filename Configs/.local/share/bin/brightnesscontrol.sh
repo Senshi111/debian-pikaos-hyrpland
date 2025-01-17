@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# Check if the script is already running
-pgrep -cf "${0##*/}" | grep -qv 1 && echo "An instance of the script is already running..." && exit 1
-
-scrDir=`dirname "$(realpath "$0")"`
-source $scrDir/globalcontrol.sh
-
-# Check if SwayOSD is installed
-use_swayosd=false
-if command -v swayosd-client >/dev/null 2>&1 && pgrep -x swayosd-server >/dev/null; then
-    use_swayosd=true
-fi
-
 print_error()
 {
 cat << EOF
