@@ -114,9 +114,9 @@ EOF
     # Install packages
     "${scrDir}/install_pkg.sh" "${scrDir}/install_pkg.lst"
     rm "${scrDir}/install_pkg.lst"
-       "${scrDir}/swww.sh"
-       "${scrDir}/install_pokemon-colorscripts.sh"
-       "${scrDir}/install_kvantum_qt6.sh"
+#       "${scrDir}/swww.sh"
+#       "${scrDir}/install_pokemon-colorscripts.sh"
+#       "${scrDir}/install_kvantum_qt6.sh"
 #        "${scrDir}/hyprutils.sh"
 #        "${scrDir}/build_hyprlang.sh"
 #        "${scrDir}/hyprcursor.sh"
@@ -125,6 +125,8 @@ EOF
 #        "${scrDir}/grimblast.sh"
 #        "${scrDir}/install_hyprland.sh"
 #        "${scrDir}/install_xdg_hyprland.sh"
+         "${scrDir}/install_grimblast.sh"
+
         pipx install hyprshade
         pipx ensurepath
 fi
