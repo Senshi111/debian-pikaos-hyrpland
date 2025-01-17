@@ -126,6 +126,7 @@ EOF
 #        "${scrDir}/install_hyprland.sh"
 #        "${scrDir}/install_xdg_hyprland.sh"
          "${scrDir}/install_grimblast.sh"
+         "${scrDir}/install_hyde_cli.sh"
 
         pipx install hyprshade
         pipx ensurepath
