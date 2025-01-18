@@ -1,80 +1,85 @@
 #!/bin/bash
+# shellcheck disable=SC2154
+# shellcheck disable=SC1091
 #|---/ /+----------------------------------------+---/ /|#
 #|--/ /-| Script to install pkgs from input list |--/ /-|#
-#|-/ /--| Adapted for Debian and Fedora          |-/ /--|#
+#|-/ /--| Prasanth Rangan                        |-/ /--|#
 #|/ /---+----------------------------------------+/ /---|#
 
-# Get the script directory
 scrDir=$(dirname "$(realpath "$0")")
-source "${scrDir}/global_fn.sh"
-if [ $? -ne 0 ]; then
+if ! source "${scrDir}/global_fn.sh"; then
     echo "Error: unable to source global_fn.sh..."
     exit 1
 fi
 
-# Package list input
-listPkg="${1:-"${scrDir}/custom_hypr.lst"}"
-pkgList=()
-processedPackages=()
+flg_DryRun=${flg_DryRun:-0}
+export log_section="package"
 
-# Preserve IFS for later restoration
-origIFS=$IFS
-IFS='|'
+#"${scrDir}/install_aur.sh" "${getAur}" 2>&1
+#chk_list "aurhlpr" "${aurList[@]}"
+#listPkg="${1:-"${scrDir}/pkg_core.lst"}"
+#archPkg=()
+#aurhPkg=()
+#ofs=$IFS
+#IFS='|'
 
-# Read and process the package list
+#-----------------------------#
+# remove blacklisted packages #
+#-----------------------------#
+if [ -f "${scrDir}/pkg_black.lst" ]; then
+    grep -v -f <(grep -v '^#' "${scrDir}/pkg_black.lst" | sed 's/#.*//;s/ //g;/^$/d') <(sed 's/#.*//' "${scrDir}/install_pkg.lst") >"${scrDir}/install_pkg_filtered.lst"
+    mv "${scrDir}/install_pkg_filtered.lst" "${scrDir}/install_pkg.lst"
+fi
+
 while read -r pkg deps; do
-    # Trim spaces and skip empty lines or comments
-    pkg=$(echo "${pkg}" | xargs)
-    if [[ -z "${pkg}" || "${pkg:0:1}" == "#" ]]; then
+    pkg="${pkg// /}"
+    if [ -z "${pkg}" ]; then
         continue
     fi
 
-    # Trim and handle dependencies
-    deps=$(echo "${deps}" | xargs)
-    missingDeps=0
-    if [[ -n "${deps}" ]]; then
-        for dep in ${deps//,/ }; do
-            if ! pkg_installed "${dep}" && ! cut -d '#' -f 1 "${listPkg}" | awk -F '|' -v chk="${dep}" '$1 == chk {exit 1}'; then
-                missingDeps=1
-                echo -e "\033[0;33m[skip]\033[0m Dependency ${dep} for ${pkg} not satisfied."
+    if [ -n "${deps}" ]; then
+        deps="${deps%"${deps##*[![:space:]]}"}"
+        while read -r cdep; do
+            pass=$(cut -d '#' -f 1 "${listPkg}" | awk -F '|' -v chk="${cdep}" '{if($1 == chk) {print 1;exit}}')
+            if [ -z "${pass}" ]; then
+                if pkg_installed "${cdep}"; then
+                    pass=1
+                else
                     break
                 fi
-        done
             fi
+        done < <(xargs -n1 <<<"${deps}")
 
-    # Skip if dependencies are missing
-    if [[ ${missingDeps} -eq 1 ]]; then
+        if [[ ${pass} -ne 1 ]]; then
+            print_log -warn "missing" "dependency [ ${deps} ] for ${pkg}..."
             continue
         fi
+    fi
 
-    # Check if package is already installed
     if pkg_installed "${pkg}"; then
-        echo -e "\033[0;33m[skip]\033[0m ${pkg} is already installed..."
+        print_log -y "[skip] " "${pkg}"
     elif pkg_available "${pkg}"; then
-        if [[ ! " ${processedPackages[@]} " =~ " ${pkg} " ]]; then
-            echo -e "\033[0;32m[repo]\033[0m Queueing ${pkg} from official repository..."
-            pkgList+=("${pkg}")
-            processedPackages+=("${pkg}")
-        fi
+        repo=$(pacman -Si "${pkg}" | awk -F ': ' '/Repository / {print $2}')
+        print_log -b "[queue] " -g "${repo}" -b "::" "${pkg}"
+        archPkg+=("${pkg}")
+    elif aur_available "${pkg}"; then
+        print_log -b "[queue] " -g "aur" -b "::" "${pkg}"
+        aurhPkg+=("${pkg}")
     else
-        echo -e "\033[0;31m[error]\033[0m Unknown package ${pkg}."
+        print_log -r "[error] " "unknown package ${pkg}..."
     fi
 done < <(cut -d '#' -f 1 "${listPkg}")
 
-# Restore IFS
-IFS=${origIFS}
+IFS=${ofs}
 
-# Install queued packages
-if [[ ${#pkgList[@]} -gt 0 ]]; then
-    if command -v apt &>/dev/null; then
-        sudo apt update
-        sudo apt install -y "${pkgList[@]}"
-    elif command -v dnf &>/dev/null; then
-        sudo dnf install -y "${pkgList[@]}"
-    else
-        echo "Error: Unsupported package manager."
-        exit 1
+if [ "${flg_DryRun}" -ne 1 ]; then
+    if [[ ${#archPkg[@]} -gt 0 ]]; then
+        print_log -b "[install] " "arch packages..."
+        sudo pacman ${use_default:+"$use_default"} -S "${archPkg[@]}"
     fi
-else
-    echo "No packages to install."
+
+    if [[ ${#aurhPkg[@]} -gt 0 ]]; then
+        print_log -b "[install] " "aur packages..."
+        "${aurhlpr}" ${use_default:+"$use_default"} -S "${aurhPkg[@]}"
+    fi
 fi

@@ -1,16 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #|---/ /+-------------------------------------+---/ /|#
-#|--/ /-| Script to apply pre-install configs |--/ /-|#
-#|-/ /--| Adapted for Debian and Fedora       |-/ /--|#
+#|--/ /-| Script to apply pre install configs |--/ /-|#
+#|-/ /--| Prasanth Rangan                     |-/ /--|#
 #|/ /---+-------------------------------------+/ /---|#
 
 scrDir=$(dirname "$(realpath "$0")")
-source "${scrDir}/global_fn.sh"
-if [ $? -ne 0 ]; then
+# shellcheck disable=SC1091
+if ! source "${scrDir}/global_fn.sh"; then
     echo "Error: unable to source global_fn.sh..."
     exit 1
 fi
 
+flg_DryRun=${flg_DryRun:-0}
+
+# grub
 # Detect package manager
 detect_package_manager() {
     if command -v apt &>/dev/null; then
@@ -26,36 +29,35 @@ detect_package_manager() {
 }
 
 detect_package_manager
-
-# GRUB configuration
 if pkg_installed grub && [ -f /boot/grub/grub.cfg ]; then
-    echo -e "\033[0;32m[BOOTLOADER]\033[0m detected // grub"
+    print_log -sec "bootloader" -stat "detected" "grub..."
 
-    if [ ! -f /etc/default/grub.t2.bkp ] && [ ! -f /boot/grub/grub.t2.bkp ]; then
-        echo -e "\033[0;32m[BOOTLOADER]\033[0m configuring grub..."
-        sudo cp /etc/default/grub /etc/default/grub.t2.bkp
-        sudo cp /boot/grub/grub.cfg /boot/grub/grub.t2.bkp
+    if [ ! -f /etc/default/grub.hyde.bkp ] && [ ! -f /boot/grub/grub.hyde.bkp ]; then
+        print_log -g "[bootloader] " -b "configure :: " "grub"
+        sudo cp /etc/default/grub /etc/default/grub.hyde.bkp
+        sudo cp /boot/grub/grub.cfg /boot/grub/grub.hyde.bkp
 
         if nvidia_detect; then
-            echo -e "\033[0;32m[BOOTLOADER]\033[0m nvidia detected, adding nvidia_drm.modeset=1 to boot option..."
+            print_log -g "[bootloader] " -b "configure :: " "nvidia detected, adding nvidia_drm.modeset=1 to boot option..."
             gcld=$(grep "^GRUB_CMDLINE_LINUX_DEFAULT=" "/etc/default/grub" | cut -d'"' -f2 | sed 's/\b nvidia_drm.modeset=.\b//g')
             sudo sed -i "/^GRUB_CMDLINE_LINUX_DEFAULT=/c\GRUB_CMDLINE_LINUX_DEFAULT=\"${gcld} nvidia_drm.modeset=1\"" /etc/default/grub
         fi
 
-        echo -e "Select grub theme:\n[1] Retroboot (dark)\n[2] Pochita (light)"
-        read -p " :: Press enter to skip grub theme <or> Enter option number : " grubopt
+        print_log -r "[bootloader] " -b " :: " "Select grub theme:" -r "\n[1]" -b " Retroboot (dark)" -r "\n[2]" -b " Pochita (light)"
+        read -r -p " :: Press enter to skip grub theme <or> Enter option number : " grubopt
         case ${grubopt} in
-            1) grubtheme="Retroboot" ;;
-            2) grubtheme="Pochita" ;;
-            *) grubtheme="None" ;;
+        1) grubtheme="Retroboot" ;;
+        2) grubtheme="Pochita" ;;
+        *) grubtheme="None" ;;
         esac
 
         if [ "${grubtheme}" == "None" ]; then
-            echo -e "\033[0;32m[BOOTLOADER]\033[0m Skippinng grub theme..."
+            print_log -g "[bootloader] " -b "skip :: " "grub theme..."
             sudo sed -i "s/^GRUB_THEME=/#GRUB_THEME=/g" /etc/default/grub
         else
-            echo -e "\033[0;32m[BOOTLOADER]\033[0m Setting grub theme // ${grubtheme}"
-            sudo tar -xzf ${cloneDir}/Source/arcs/Grub_${grubtheme}.tar.gz -C /usr/share/grub/themes/
+            print_log -g "[bootloader] " -b "set :: " "grub theme // ${grubtheme}"
+            # shellcheck disable=SC2154
+            sudo tar -xzf "${cloneDir}/Source/arcs/Grub_${grubtheme}.tar.gz" -C /usr/share/grub/themes/
             sudo sed -i "/^GRUB_DEFAULT=/c\GRUB_DEFAULT=saved
             /^GRUB_GFXMODE=/c\GRUB_GFXMODE=1280x1024x32,auto
             /^GRUB_THEME=/c\GRUB_THEME=\"/usr/share/grub/themes/${grubtheme}/theme.txt\"
@@ -65,39 +67,66 @@ if pkg_installed grub && [ -f /boot/grub/grub.cfg ]; then
 
         sudo grub-mkconfig -o /boot/grub/grub.cfg
     else
-        echo -e "\033[0;33m[SKIP]\033[0m grub is already configured..."
+        print_log -y "[bootloader] " -b "exist :: " "grub is already configured..."
     fi
 fi
 
 # systemd-boot
-if pkg_installed systemd && nvidia_detect && [ $(bootctl status 2> /dev/null | awk '{if ($1 == "Product:") print $2}') == "systemd-boot" ]; then
-    echo -e "\033[0;32m[BOOTLOADER]\033[0m detected // systemd-boot"
+if pkg_installed systemd && nvidia_detect && [ "$(bootctl status 2>/dev/null | awk '{if ($1 == "Product:") print $2}')" == "systemd-boot" ]; then
+    print_log -sec "bootloader" -stat "detected" "systemd-boot"
 
-    if [ $(ls -l /boot/loader/entries/*.conf.t2.bkp 2> /dev/null | wc -l) -ne $(ls -l /boot/loader/entries/*.conf 2> /dev/null | wc -l) ]; then
-        echo "nvidia detected, adding nvidia_drm.modeset=1 to boot option..."
-        find /boot/loader/entries/ -type f -name "*.conf" | while read imgconf; do
-            sudo cp ${imgconf} ${imgconf}.t2.bkp
-            sdopt=$(grep -w "^options" ${imgconf} | sed 's/\b quiet\b//g' | sed 's/\b splash\b//g' | sed 's/\b nvidia_drm.modeset=.\b//g')
-            sudo sed -i "/^options/c${sdopt} quiet splash nvidia_drm.modeset=1" ${imgconf}
+    if [ "$(find /boot/loader/entries/ -type f -name '*.conf.hyde.bkp' 2>/dev/null | wc -l)" -ne "$(find /boot/loader/entries/ -type f -name '*.conf' 2>/dev/null | wc -l)" ]; then
+        print_log -g "[bootloader] " -b " :: " "nvidia detected, adding nvidia_drm.modeset=1 to boot option..."
+        find /boot/loader/entries/ -type f -name "*.conf" | while read -r imgconf; do
+            sudo cp "${imgconf}" "${imgconf}.hyde.bkp"
+            sdopt=$(grep -w "^options" "${imgconf}" | sed 's/\b quiet\b//g' | sed 's/\b splash\b//g' | sed 's/\b nvidia_drm.modeset=.\b//g')
+            sudo sed -i "/^options/c${sdopt} quiet splash nvidia_drm.modeset=1" "${imgconf}"
         done
     else
-        echo -e "\033[0;33m[SKIP]\033[0m systemd-boot is already configured..."
+        print_log -y "[bootloader] " -stat "skipped" "systemd-boot is already configured..."
     fi
 fi
 
 # pacman
-if [ -f /etc/pacman.conf ] && [ ! -f /etc/pacman.conf.t2.bkp ]; then
-    echo -e "\033[0;32m[PACMAN]\033[0m adding extra spice to pacman..."
+if [ -f /etc/pacman.conf ] && [ ! -f /etc/pacman.conf.hyde.bkp ]; then
+    print_log -g "[PACMAN] " -b "modify :: " "adding extra spice to pacman..."
 
-    sudo cp /etc/pacman.conf /etc/pacman.conf.t2.bkp
-    sudo sed -i "/^#Color/c\Color\nILoveCandy
+    # shellcheck disable=SC2154
+    [ "${flg_DryRun}" -eq 1 ] || sudo cp /etc/pacman.conf /etc/pacman.conf.hyde.bkp
+    [ "${flg_DryRun}" -eq 1 ] || sudo sed -i "/^#Color/c\Color\nILoveCandy
     /^#VerbosePkgLists/c\VerbosePkgLists
     /^#ParallelDownloads/c\ParallelDownloads = 5" /etc/pacman.conf
-    sudo sed -i '/^#\[multilib\]/,+1 s/^#//' /etc/pacman.conf
+    [ "${flg_DryRun}" -eq 1 ] || sudo sed -i '/^#\[multilib\]/,+1 s/^#//' /etc/pacman.conf
 
-    sudo pacman -Syyu
-    sudo pacman -Fy
-
+    print_log -g "[PACMAN] " -b "update :: " "packages..."
+    [ "${flg_DryRun}" -eq 1 ] || sudo pacman -Syyu
+    [ "${flg_DryRun}" -eq 1 ] || sudo pacman -Fy
 else
-    echo -e "\033[0;33m[SKIP]\033[0m pacman is already configured..."
+    print_log -sec "PACMAN" -stat "skipped" "pacman is already configured..."
+fi
+
+if grep -q '\[chaotic-aur\]' /etc/pacman.conf; then
+    print_log -sec "CHAOTIC-AUR" -stat "skipped" "Chaotic AUR entry found in pacman.conf..."
+else
+    prompt_timer 120 "Would you like to install Chaotic AUR? [y/n] | q to quit "
+    is_chaotic_aur=false
+
+    case "${PROMPT_INPUT}" in
+    y | Y)
+        is_chaotic_aur=true
+        ;;
+    n | N)
+        is_chaotic_aur=false
+        ;;
+    q | Q)
+        print_log -sec "Chaotic AUR" -crit "Quit" "Exiting..."
+        exit 1
+        ;;
+    *)
+        is_chaotic_aur=true
+        ;;
+    esac
+    if [ "${is_chaotic_aur}" == true ]; then
+        sudo "${scrDir}/chaotic_aur.sh" --install
+    fi
 fi
