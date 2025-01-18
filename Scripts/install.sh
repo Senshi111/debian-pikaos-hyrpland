@@ -28,7 +28,7 @@ if ! source "${scrDir}/global_fn.sh"; then
     echo "Error: unable to source global_fn.sh..."
     exit 1
 fi
-
+detect_package_manager
 #------------------#
 # evaluate options #
 #------------------#
