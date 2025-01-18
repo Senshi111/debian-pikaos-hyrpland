@@ -176,7 +176,6 @@ done
 # Optional packages (commented out in the list)
 optional_packages=(
     hyprland
-    swaylock
     swaylock-effects
 )
 
