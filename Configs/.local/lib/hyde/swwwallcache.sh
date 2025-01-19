@@ -1,15 +1,9 @@
 #!/bin/bash
 
 #// set variables
-
-# shellcheck source=$HOME/.local/bin/hyde-shell
+scrDir="$(dirname "$(realpath "$0")")"
 # shellcheck disable=SC1091
-if ! source "$(which hyde-shell)"; then
-    echo "[wallbash] code :: Error: hyde-shell not found."
-    echo "[wallbash] code :: Is HyDE installed?"
-    exit 1
-fi
-
+source "${scrDir}/globalcontrol.sh"
 export scrDir
 export thmbDir
 export dcolDir
@@ -56,8 +50,9 @@ fn_wallcache_force() {
 fn_envar_cache() {
     if command -v rofi &>/dev/null; then
         mkdir -p "$XDG_DATA_HOME/rofi/themes"
-        ln -snf "$SHARE_DIR/hyde/rofi/themes"/* "$XDG_DATA_HOME/rofi/themes/"
+        ln -snf "$XDG_DATA_HOME/hyde/rofi/themes"/* "$XDG_DATA_HOME/rofi/themes/"
     fi
+    exit 0
 }
 
 export -f fn_wallcache
