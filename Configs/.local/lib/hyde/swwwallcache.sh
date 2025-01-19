@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #// set variables
+
 scrDir="$(dirname "$(realpath "$0")")"
 # shellcheck disable=SC1091
 source "${scrDir}/globalcontrol.sh"
@@ -52,7 +53,6 @@ fn_envar_cache() {
         mkdir -p "$XDG_DATA_HOME/rofi/themes"
         ln -snf "$XDG_DATA_HOME/hyde/rofi/themes"/* "$XDG_DATA_HOME/rofi/themes/"
     fi
-    exit 0
 }
 
 export -f fn_wallcache
