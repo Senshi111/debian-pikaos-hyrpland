@@ -40,6 +40,12 @@ esac
 hypr_border="${hypr_border:-10}"
 hypr_width="${hypr_width:-2}"
 wind_border=$((hypr_border * 3))
+
+if [[ "$ROFI_LAUNCH_FULLSCREEN" == "true" ]]; then
+    hypr_width="0"
+    wind_border="0"
+fi
+
 [ "${hypr_border}" -eq 0 ] && elem_border="10" || elem_border=$((hypr_border * 2))
 r_override="window {border: ${hypr_width}px; border-radius: ${wind_border}px;} element {border-radius: ${elem_border}px;}"
 r_scale="configuration {font: \"JetBrainsMono Nerd Font ${rofiScale}\";}"
@@ -49,7 +55,26 @@ i_override="configuration {icon-theme: \"${i_override}\";}"
 #// launch rofi
 rofi -show "${r_mode}" \
     -show-icons \
+    -config "${rofi_config}" \
     -theme-str "${r_scale}" \
-    -theme-str "${r_override}" \
     -theme-str "${i_override}" \
-    -config "${rofi_config}"
+    -theme-str "${r_override}" \
+    -theme "${rofi_config}" &
+disown
+
+#// Set full screen state
+#TODO Contributor notes:
+#? - Workaround to set the full screen state of rofi dynamically and efficiently.
+#? - Avoids invoking rofi twice before rendering.
+#? - Checks if the theme has fullscreen set to true after rendering.
+#? - Sets the variable accordingly for use on the next launch.
+
+rofi -show "${r_mode}" \
+    -show-icons \
+    -config "${rofi_config}" \
+    -theme-str "${r_scale}" \
+    -theme-str "${i_override}" \
+    -theme-str "${r_override}" \
+    -theme "${rofi_config}" \
+    -dump-theme |
+    { grep -q "fullscreen.*true" && set_conf "ROFI_LAUNCH_FULLSCREEN" "true"; } || set_conf "ROFI_LAUNCH_FULLSCREEN" "false"
