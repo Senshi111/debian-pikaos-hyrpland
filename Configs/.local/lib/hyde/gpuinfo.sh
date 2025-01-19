@@ -17,7 +17,7 @@
 # Range (min … max):   184.0 ms … 272.1 ms    12 runs
 
 scrDir=$(dirname "$(realpath "$0")")
-gpuinfo_file="/tmp/hyde-${UID}-processors"
+gpuinfo_file="/tmp/hyde-${UID}-gpuinfo"
 
 # Use the AQ_DRM_DEVICES variable to set the priority of the GPUs
 AQ_DRM_DEVICES="${AQ_DRM_DEVICES:-WLR_DRM_DEVICES}"
@@ -285,8 +285,20 @@ general_query() { # Function to get temperature from 'sensors'
     currIdle=$(awk '{print $5 }' <<<"$statFile")
     diffStat=$((currStat - GPUINFO_PREV_STAT))
     diffIdle=$((currIdle - GPUINFO_PREV_IDLE))
+
+    # Store state and sleep
+    GPUINFO_PREV_STAT=$currStat
+    GPUINFO_PREV_IDLE=$currIdle
+
+    # Save the current state to the file
+    sed -i -e "/^GPUINFO_PREV_STAT=/c\GPUINFO_PREV_STAT=\"$currStat\"" -e "/^GPUINFO_PREV_IDLE=/c\GPUINFO_PREV_IDLE=\"$currIdle\"" "$gpuinfo_file" || {
+      echo "GPUINFO_PREV_STAT=\"$currStat\"" >>"$cpuinfo_file"
+      echo "GPUINFO_PREV_IDLE=\"$currIdle\"" >>"$cpuinfo_file"
+    }
+
     awk -v stat="$diffStat" -v idle="$diffIdle" 'BEGIN {printf "%.1f", (stat/(stat+idle))*100}'
   }
+
   # Get dynamic CPU information
   utilization=$(get_utilization)
   current_clock_speed=$(awk '{sum += $1; n++} END {if (n > 0) print sum / n / 1000 ""}' /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq)

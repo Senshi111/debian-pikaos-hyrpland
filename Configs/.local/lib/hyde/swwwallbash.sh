@@ -3,8 +3,6 @@
 
 #// set variables
 
-#// set variables
-
 scrDir="$(dirname "$(realpath "$0")")"
 export scrDir
 # shellcheck disable=SC1091
