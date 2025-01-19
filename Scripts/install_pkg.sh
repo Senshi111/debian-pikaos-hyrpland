@@ -1,47 +1,83 @@
 #!/bin/bash
 # shellcheck disable=SC2154
 # shellcheck disable=SC1091
+
 #|---/ /+----------------------------------------+---/ /|#
 #|--/ /-| Script to install pkgs from input list |--/ /-|#
 #|-/ /--| Prasanth Rangan                        |-/ /--|#
 #|/ /---+----------------------------------------+/ /---|#
 
+# Define the directory of the script
 scrDir=$(dirname "$(realpath "$0")")
+
+# Source the global functions (if available)
 if ! source "${scrDir}/global_fn.sh"; then
     echo "Error: unable to source global_fn.sh..."
     exit 1
 fi
 
+# Initialize dry run flag and package list
 flg_DryRun=${flg_DryRun:-0}
 export log_section="package"
 
-#"${scrDir}/install_aur.sh" "${getAur}" 2>&1
-#chk_list "aurhlpr" "${aurList[@]}"
-#listPkg="${1:-"${scrDir}/pkg_core.lst"}"
-#archPkg=()
-#aurhPkg=()
-#ofs=$IFS
-#IFS='|'
-
 #-----------------------------#
-# remove blacklisted packages #
+# Remove blacklisted packages #
 #-----------------------------#
 if [ -f "${scrDir}/pkg_black.lst" ]; then
     grep -v -f <(grep -v '^#' "${scrDir}/pkg_black.lst" | sed 's/#.*//;s/ //g;/^$/d') <(sed 's/#.*//' "${scrDir}/install_pkg.lst") >"${scrDir}/install_pkg_filtered.lst"
     mv "${scrDir}/install_pkg_filtered.lst" "${scrDir}/install_pkg.lst"
 fi
 
+# Initialize package arrays
+archPkg=()
+aurhPkg=()
+
+# Define the internal field separator
+ofs=$IFS
+IFS='|'
+
+# Determine the package manager
+if command -v apt &>/dev/null; then
+    PM="apt"
+    INSTALL_CMD="sudo apt install -y"
+elif command -v yay &>/dev/null; then
+    PM="yay"
+    INSTALL_CMD="yay -S --noconfirm"
+elif command -v dnf &>/dev/null; then
+    PM="dnf"
+    INSTALL_CMD="sudo dnf install -y"
+else
+    echo "Error: No supported package manager found (apt, yay, or dnf)."
+    exit 1
+fi
+
+# Ensure install_pkg.lst is defined and exists
+listPkg="${1:-${scrDir}/install_pkg.lst}"
+
+if [ ! -f "${listPkg}" ]; then
+    echo "Error: Package list file '${listPkg}' not found."
+    exit 1
+fi
+
+# Process each package and its dependencies
 while read -r pkg deps; do
     pkg="${pkg// /}"
+    
+    # Skip empty package names
     if [ -z "${pkg}" ]; then
         continue
     fi
 
+    # Process dependencies
     if [ -n "${deps}" ]; then
         deps="${deps%"${deps##*[![:space:]]}"}"
+        pass=0
         while read -r cdep; do
+            # Check if the dependency is already in the list
             pass=$(cut -d '#' -f 1 "${listPkg}" | awk -F '|' -v chk="${cdep}" '{if($1 == chk) {print 1;exit}}')
+            
             if [ -z "${pass}" ]; then
+                # If not, check if it is installed
                 if pkg_installed "${cdep}"; then
                     pass=1
                 else
@@ -50,12 +86,14 @@ while read -r pkg deps; do
             fi
         done < <(xargs -n1 <<<"${deps}")
 
+        # If dependency is missing, log and skip package
         if [[ ${pass} -ne 1 ]]; then
             print_log -warn "missing" "dependency [ ${deps} ] for ${pkg}..."
             continue
         fi
     fi
 
+    # Check if the package is already installed or available
     if pkg_installed "${pkg}"; then
         print_log -y "[skip] " "${pkg}"
     elif pkg_available "${pkg}"; then
@@ -70,16 +108,29 @@ while read -r pkg deps; do
     fi
 done < <(cut -d '#' -f 1 "${listPkg}")
 
+# Restore the original field separator
 IFS=${ofs}
 
+# Install packages if not in dry run mode
 if [ "${flg_DryRun}" -ne 1 ]; then
+    # Install Arch packages
     if [[ ${#archPkg[@]} -gt 0 ]]; then
-        print_log -b "[install] " "arch packages..."
-        sudo pacman ${use_default:+"$use_default"} -S "${archPkg[@]}"
+        print_log -b "[install] " "Arch packages..."
+        if [ "${PM}" == "apt" ]; then
+            sudo apt update
+        elif [ "${PM}" == "yay" ]; then
+            yay -Syu --noconfirm
+        fi
+        $INSTALL_CMD "${archPkg[@]}"
     fi
 
+    # Install AUR packages
     if [[ ${#aurhPkg[@]} -gt 0 ]]; then
-        print_log -b "[install] " "aur packages..."
-        "${aurhlpr}" ${use_default:+"$use_default"} -S "${aurhPkg[@]}"
+        print_log -b "[install] " "AUR packages..."
+        if [ "${PM}" == "yay" ]; then
+            yay ${use_default:+"$use_default"} -S "${aurhPkg[@]}"
+        elif [ "${PM}" == "apt" ] || [ "${PM}" == "dnf" ]; then
+            print_log -r "[error] " "AUR packages are not supported with ${PM}."
+        fi
     fi
 fi
