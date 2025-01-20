@@ -6,7 +6,7 @@ scrDir="$(dirname "$(realpath "$0")")"
 # shellcheck disable=SC1091
 source "${scrDir}/globalcontrol.sh"
 
-#// set rofi scalingS
+#// set rofi scaling
 
 rofiScale="${ROFI_WALLPAPER_SCALE}"
 [[ "${rofiScale}" =~ ^[0-9]+$ ]] || rofiScale=${ROFI_SCALE:-10}
@@ -23,8 +23,12 @@ mon_x_res=$(hyprctl -j monitors | jq '.[] | select(.focused == true) | (.width /
 elm_width=$(((28 + 8 + 5) * rofiScale))
 max_avail=$((mon_x_res - (4 * rofiScale)))
 col_count=$((max_avail / elm_width))
-r_override="window{width:100%;} listview{columns:${col_count};spacing:5em;} element{border-radius:${elem_border}px;\
-orientation:vertical;} element-icon{size:28em;border-radius:0em;} element-text{padding:1em;}"
+r_override="window{width:100%;}
+    listview{columns:${col_count};spacing:5em;}
+    element{border-radius:${elem_border}px;
+    orientation:vertical;} 
+    element-icon{size:28em;border-radius:0em;}
+    element-text{padding:1em;}"
 
 #// launch rofi menu
 
@@ -36,8 +40,7 @@ get_hashmap "${wallPathArray[@]}"
 wallListBase=()
 # shellcheck disable=SC2154
 for wall in "${wallList[@]}"; do
-    # wallListBase+=("$(basename "$wall")")
-    wallListBase+=("${wall##*/}")
+    wallListBase+=("${wall##*/}") # get the basename // bash way
 done
 
 # shellcheck disable=SC2154
@@ -46,7 +49,7 @@ rofiSel=$(paste <(printf "%s\n" "${wallListBase[@]}") <(printf "|%s\n" "${wallHa
     rofi -dmenu \
         -theme-str "${r_scale}" \
         -theme-str "${r_override}" \
-        -config "selector" \
+        -theme "${ROFI_WALLPAPER_STYLE:-selector}" \
         -select "${currentWall}" | xargs)
 
 #// apply wallpaper
@@ -58,7 +61,6 @@ if [ -n "${rofiSel}" ]; then
     done
     if [ -n "${setWall}" ]; then
         "${scrDir}/swwwallpaper.sh" -s "${setWall}"
-        echo notify-send -a "HyDE Alert" -i "${thmbDir}/$(set_hash "${setWall}").sqre" " ${rofiSel}"
         notify-send -a "HyDE Alert" -i "${thmbDir}/$(set_hash "${setWall}").sqre" " ${rofiSel}"
     else
         notify-send -a "HyDE Alert" "Wallpaper not found"
