@@ -91,7 +91,7 @@ else
 fi
 
 # shell
-"${scrDir}/restore_shl.sh"
+#"${scrDir}/restore_shl.sh"
 
 # flatpak
 if ! pkg_installed flatpak; then

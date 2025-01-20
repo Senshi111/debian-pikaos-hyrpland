@@ -1,6 +1,80 @@
 #!/bin/bash
 
 # Function to add a value to a configuration file if not present
+# Update the package list
+echo "Updating package list..."
+sudo apt update
+
+# Install necessary dependencies
+echo "Installing required dependencies..."
+sudo apt install -y \
+libavcodec-dev \
+libavformat-dev \
+libavutil-dev \
+libcairo2-dev \
+libdeflate-dev \
+libdisplay-info-dev \
+libdrm-dev \
+libegl1-mesa-dev \
+libgbm-dev \
+libgdk-pixbuf-2.0-dev \
+libgdk-pixbuf2.0-bin \
+libgirepository1.0-dev \
+libgl1-mesa-dev \
+libgraphene-1.0-0 \
+libgraphene-1.0-dev \
+libgulkan-0.15-0t64 \
+libgulkan-dev \
+libinih-dev \
+libinput-dev \
+libjbig-dev \
+libjpeg-dev \
+libjpeg62-turbo-dev \
+liblerc-dev \
+libliftoff-dev \
+liblz4-dev \
+liblzma-dev \
+libpam0g-dev \
+libpango1.0-dev \
+libpipewire-0.3-dev \
+libseat-dev \
+libspa-0.2-dev \
+libswresample-dev \
+libsystemd-dev \
+librsvg2-dev \
+libtiff-dev \
+libtomlplusplus-dev \
+libpugixml-dev \
+libudev-dev \
+libvkfft-dev \
+libvulkan-dev \
+libvulkan-volk-dev \
+libwayland-dev \
+libwebp-dev \
+libxkbcommon-dev \
+libxkbcommon-x11-dev \
+libxkbregistry-dev \
+libxcb-composite0-dev \
+libxcb-dri3-dev \
+libxcb-ewmh-dev \
+libxcb-icccm4-dev \
+libxcb-present-dev \
+libxcb-render-util0-dev \
+libxcb-res0-dev \
+libxcb-xinput-dev \
+libxcb-xkb-dev \
+libxml2-dev \
+libxxhash-dev \
+libzip-dev \
+libxcursor-dev \
+libxcb-xfixes0-dev \
+libxcb-errors-dev \
+
+
+
+
+
+
 add_to_file() {
     local config_file="$1"
     local value="$2"
