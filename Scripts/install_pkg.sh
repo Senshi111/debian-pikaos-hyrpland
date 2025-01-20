@@ -36,7 +36,7 @@ aurhPkg=()
 ofs=$IFS
 IFS='|'
 
-# Determine the package manager
+# Determine the package manager (Debian should use apt)
 if command -v apt &>/dev/null; then
     PM="apt"
     INSTALL_CMD="sudo apt install -y"
@@ -97,12 +97,8 @@ while read -r pkg deps; do
     if pkg_installed "${pkg}"; then
         print_log -y "[skip] " "${pkg}"
     elif pkg_available "${pkg}"; then
-        repo=$(pacman -Si "${pkg}" | awk -F ': ' '/Repository / {print $2}')
-        print_log -b "[queue] " -g "${repo}" -b "::" "${pkg}"
+        print_log -b "[queue] " -g "repo" -b "::" "${pkg}"
         archPkg+=("${pkg}")
-    elif aur_available "${pkg}"; then
-        print_log -b "[queue] " -g "aur" -b "::" "${pkg}"
-        aurhPkg+=("${pkg}")
     else
         print_log -r "[error] " "unknown package ${pkg}..."
     fi
@@ -113,24 +109,10 @@ IFS=${ofs}
 
 # Install packages if not in dry run mode
 if [ "${flg_DryRun}" -ne 1 ]; then
-    # Install Arch packages
+    # Install Debian packages
     if [[ ${#archPkg[@]} -gt 0 ]]; then
-        print_log -b "[install] " "Arch packages..."
-        if [ "${PM}" == "apt" ]; then
-            sudo apt update
-        elif [ "${PM}" == "yay" ]; then
-            yay -Syu --noconfirm
-        fi
+        print_log -b "[install] " "Debian packages..."
+        sudo apt update
         $INSTALL_CMD "${archPkg[@]}"
-    fi
-
-    # Install AUR packages
-    if [[ ${#aurhPkg[@]} -gt 0 ]]; then
-        print_log -b "[install] " "AUR packages..."
-        if [ "${PM}" == "yay" ]; then
-            yay ${use_default:+"$use_default"} -S "${aurhPkg[@]}"
-        elif [ "${PM}" == "apt" ] || [ "${PM}" == "dnf" ]; then
-            print_log -r "[error] " "AUR packages are not supported with ${PM}."
-        fi
     fi
 fi
